@@ -11,14 +11,48 @@
 using namespace std;
 
 
-// time complexity: O(n^2)
+// time complexity: O(n)
 // space complexity: O(1)
 bool is_permutated(const char *n, const char *k)
+{
+	static const int MAX_CHAR = 0x7F;  // ASCII
+	int table[MAX_CHAR] = {0, };
+
+	if (n == NULL || k == NULL)
+		return false;
+
+	int i = 0;
+	int j = 0;
+	while (n[i] || k[j]) {
+		if (n[i])
+			table[n[i++]] += 1;
+		if (k[j])
+			table[k[j++]] -= 1;
+	}
+
+	bool positive = false;
+	bool negative = false;
+	for (int l = 0; l < MAX_CHAR; l++) {
+		if (positive == false && table[l] > 0)
+			positive = true;
+		else if (negative == false && table[l] < 0)
+			negative = true;
+		if (positive && negative)
+			return false;
+	}
+
+	return true;
+}
+
+
+// time complexity: O(n^2)
+// space complexity: O(1)
+bool is_rotated(const char *n, const char *k)  // it's not is_permutated!!!
 {
 	int ln = strlen(n);  // time: O(n), space: O(1)
 	int lk = strlen(k);
 	if (ln < lk)
-		return is_permutated(k, n);
+		return is_rotated(k, n);
 
 	for (int i = 0; i < ln; ++i) {
 		if (n[i] != k[0])
