@@ -47,6 +47,34 @@ void rotate(int *image, int n)
 }
 
 
+// time complexity: O(n^2)
+// space complexity: O(1)
+void rotate_adv(int *image, int n)
+{
+#define AXIS2INDEX(row, col)  row*n + col  // zero-based
+
+	int begin = 0;
+	int end = n - 2;
+	for ( ; begin <= end; ++begin, --end) {
+		for (int i = begin; i < end; ++i) {
+			int j = end - i;
+			int left_top = AXIS2INDEX(begin, i);
+			int left_bottom = AXIS2INDEX(j, begin);
+			int right_top = AXIS2INDEX(end, j);
+			int right_bottom = AXIS2INDEX(i, end);
+
+			int temp = image[left_top];
+			image[left_top] = image[left_bottom];
+			image[left_bottom] = image[right_bottom];
+			image[right_bottom] = image[right_top];
+			image[right_top] = temp;
+		}
+	}
+
+#undef AXIS2INDEX
+}
+
+
 void print_matrix(int *image, int n)
 {
 	for (int i = 0; i < n; ++i) {
