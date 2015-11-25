@@ -43,6 +43,30 @@ slist * rget(slist *first, int i)  // zero-based
 }
 
 
+// time complexity: O(N) but more effective than the rget()
+// space complexity: O(1)
+slist * rget_adv(slist *first, int index)  // zero-based
+{
+	if (index < 0)
+		return NULL;
+
+	slist *i = first;
+	int k;
+	for (k = 0; i && k <= index; ++k)
+		i = i->next;
+
+	if (k <= index && i == NULL)
+		return NULL;
+
+	slist *j = first;
+	while (i) {
+		i = i->next;
+		j = j->next;
+	}
+	return j;
+}
+
+
 void print_slist(slist *first, int i=-1) {
 	if (first == NULL) {
 		cout << "the " << i << " to last element is empty." << endl;
@@ -78,15 +102,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	int index;
 
 	index = 0;
-	print_slist(rget(l, index), index);
+	print_slist(rget_adv(l, index), index);
 	index = 2;
-	print_slist(rget(l, index), index);
+	print_slist(rget_adv(l, index), index);
 	index = 6;
-	print_slist(rget(l, index), index);
+	print_slist(rget_adv(l, index), index);
 	index = 8;
-	print_slist(rget(l, index), index);
+	print_slist(rget_adv(l, index), index);
 	index = 9;
-	print_slist(rget(l, index), index);
+	print_slist(rget_adv(l, index), index);
 
 	while (l) {
 		it = l;
