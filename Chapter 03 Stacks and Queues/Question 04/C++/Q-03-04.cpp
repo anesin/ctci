@@ -67,6 +67,8 @@ public:
 	}
 
 private:
+	// time complexity: O(N^2)
+	// space complexity: O(N)
 	void slide(int from, int via, int to, int n) {
 		switch (n) {
 		case 0:
