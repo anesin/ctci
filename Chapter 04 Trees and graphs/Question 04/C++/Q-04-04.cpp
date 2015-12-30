@@ -28,6 +28,8 @@ public:
 typedef list<TreeNode *> LinkedList;
 
 
+// time complexity: O(N)  // without recursive call stack: O(log(N))
+// space complexity: O(N)
 void create_recursive(vector<LinkedList> &arr, unsigned int depth, TreeNode *node)
 {
 	if (node == NULL)
@@ -51,6 +53,8 @@ vector<LinkedList> create_depth_first(TreeNode *root)
 }
 
 
+// time complexity: O(N)
+// space complexity: O(N)
 vector<LinkedList> create_width_first(TreeNode *root)
 {
 	vector<LinkedList> arr;
