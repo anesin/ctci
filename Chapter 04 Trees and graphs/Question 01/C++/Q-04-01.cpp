@@ -47,7 +47,7 @@ int balance_height(const BinaryTree *root)
 }
 
 // time complexity: O(N)
-// space complexity: O(log(N))
+// space complexity: O(log N)
 bool balance(const BinaryTree *root)
 {
 	return balance_height(root) >= 0;

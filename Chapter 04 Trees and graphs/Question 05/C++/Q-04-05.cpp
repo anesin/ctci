@@ -22,7 +22,7 @@ public:
 };
 
 // time complexity: O(N)
-// space complexity: O(1)
+// space complexity: O(log N)
 bool is_bst(const BTree &node, int &begin, int &end)
 {
 	begin = end = node.num;

@@ -52,7 +52,7 @@ bool is_family(Node *ancestor, Node *descendant)
 }
 
 // time complexity: O(N)
-// space complexity: O(1) without call stack
+// space complexity: O(log N)
 Node * find_ancestor(Node *n1, Node *n2)  // use parent
 {
 	if (n1 == NULL || n1->parent == NULL || n2 == NULL || n2->parent == NULL)
@@ -75,7 +75,7 @@ Node * find_ancestor(Node *n1, Node *n2)  // use parent
 
 
 // time complexity: O(N)
-// space complexity: O(1) without call stack
+// space complexity: O(log N)
 Node * preorder_traversal(Node *n, Node *n1, Node *n2, bool &find1, bool &find2)
 {
 	if (n == NULL)

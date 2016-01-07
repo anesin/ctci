@@ -39,8 +39,8 @@ public:
 };
 
 
-// time complexity: O(m)
-// space complexity: O(log m)
+// time complexity: O(M)
+// space complexity: O(log M)
 bool compare(Node *sup, Node *sub)
 {
 	if (sub == NULL)
@@ -50,8 +50,8 @@ bool compare(Node *sup, Node *sub)
 	return compare(sup->left, sub->left) && compare(sup->right, sub->right);
 }
 
-// time complexity: O(n + km)
-// space complexity: O(log n + log m)
+// time complexity: O(N + kM)
+// space complexity: O(log N + log M)
 bool match(Node *sup, Node *sub_root)
 {
 	if (sup == NULL)

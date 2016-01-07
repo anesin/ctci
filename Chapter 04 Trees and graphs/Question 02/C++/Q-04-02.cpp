@@ -67,7 +67,7 @@ bool route_iterative(Node *from, Node *to)
 
 
 // time complexity: O(N)
-// space complexity: O(1) without call-stack
+// space complexity: O(N)
 bool route_recursive(Node *from, Node *to)
 {
 	if (from == NULL || to == NULL || from->visit)
