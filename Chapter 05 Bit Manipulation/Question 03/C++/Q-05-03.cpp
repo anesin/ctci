@@ -79,6 +79,67 @@ bool next_largest(uint &n)
 }
 
 
+#define BIT_METHOD
+
+// Time complexity: O(N)
+// Space complexity: O(1)
+bool next_smallest_adv(uint &n)
+{
+	int t = n;
+	int c0 = 0;
+	while ((t&1) == 0 && t != 0) {
+		++c0;
+		t >>= 1;
+	}
+	int c1 = 0;
+	while ((t&1) == 1) {
+		++c1;
+		t >>= 1;
+	}
+	int p = c1 + c0;
+	if (p >= MAX_BIT || p == 0)  // UNIT_MAX or 0
+		return false;
+
+#ifdef BIT_METHOD
+	n |= 1<<p;
+	n &= ~((1<<p) - 1);
+	n |= (1<<(c1 - 1)) - 1;
+#else
+	n += (1<<c0) + (1<<(c1 - 1)) - 1;
+#endif
+	return true;
+}
+
+// Time complexity: O(N)
+// Space complexity: O(1)
+bool next_largest_adv(uint &n)
+{
+	int t = n;
+	int c1 = 0;
+	while ((t&1) == 1) {
+		++c1;
+		t >>= 1;
+	}
+	int c0 = 0;
+	while ((t&1) == 0 && t != 0) {
+		++c0;
+		t >>= 1;
+	}
+	int p = c1 + c0;
+	if (p >= MAX_BIT || c0 == 0)  // UNIT_MAX or 0
+		return false;
+
+#ifdef BIT_METHOD
+	n &= ~(1<<p);
+	n |= (1<<p) - 1;
+	n &= (~0)<<(c0 - 1);
+#else
+	n -= (1<<c1) + (1<<(c0 - 1)) - 1;
+#endif
+	return true;
+}
+
+
 int count_bit(uint n)
 {
 	int count = 0;
@@ -90,34 +151,42 @@ int count_bit(uint n)
 	return count;
 }
 
-void print_numbers(uint n)
+void print_number(const char *title, bool result, uint n)
 {
-	cout << "a number " << n << " has " << count_bit(n) << " bits." << endl;
-
-	cout << "the next largest is ";
-	uint i = n;
-	if (next_largest(i))
-		cout << i << " (" << count_bit(i) << " bits)";
+	cout << title;
+	if (result)
+		cout << n << " (" << count_bit(n) << " bits)";
 	else
 		cout << "not exist.";
 	cout << endl;
+}
 
-	cout << "the next smallest is ";
-	uint j = n;
-	if (next_smallest(j))
-		cout << j << " (" << count_bit(j) << " bits)";
-	else
-		cout << "not exist.";
-	cout << endl << endl;
+void test(uint n)
+{
+	cout << "a number " << n << " has " << count_bit(n) << " bits." << endl;
+
+	bool result;
+	uint t;
+
+	result = next_largest(t = n);
+	print_number("the next largest:     ", next_largest(t), t);
+	result = next_largest_adv(t = n);
+	print_number("the next largest adv: ", next_largest_adv(t), t);
+
+	result = next_smallest(t = n);
+	print_number("the next smallest:     ", next_smallest(t), t);
+	result = next_smallest_adv(t = n);
+	print_number("the next smallest adv: ", next_smallest_adv(t), t);
+
+	cout << endl;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	print_numbers(0);
-	print_numbers(1);
-	print_numbers(21);
-	print_numbers(22);
-	print_numbers(11);
+	test(0);
+	test(1);
+	test(21);
+	test(22);
+	test(11);
 	return 0;
 }
-
