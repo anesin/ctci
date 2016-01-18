@@ -8,7 +8,7 @@ What does n-1 look like (as compared with n)?
 
 Try doing subtraction by hand (in base 2 or 10). What happens?
 
-      1101011900 [base 2]                593100 [base 18]
+      1101011000 [base 2]                593100 [base 18]
     -          1                       -      1
     = 1101010111 [base 2]              = 593099 [base 10]
 
