@@ -1,0 +1,5 @@
+At first, give serial number at all bottles from 0 to 20, and take out the pills each bottle by a number.
+Measure those all pills by the scale at one go.
+Subtract 210 gram from the total weight, and then divide it by 0.1 gram.
+A '210 gram' means the total weight under condition of same weight(1 gram) pill.
+The quotiet is the order of the heavy bottle.
