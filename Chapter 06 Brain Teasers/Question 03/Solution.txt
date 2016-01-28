@@ -1,0 +1,7 @@
+1. Fill 5qt jug.
+2. Fill 3qt jug with 5qt's water.
+3. Drain 3qt jug.
+4. Fill 3qt jug with 5qt's remaining water; 2qt.
+5. Fill 5qt jug.
+6. Fill 3qt jug with 5qt's water; 1qt.
+7. Then there is 4qt water in 5qt jug.
