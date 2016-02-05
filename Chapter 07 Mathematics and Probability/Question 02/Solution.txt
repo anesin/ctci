@@ -1,0 +1,11 @@
+(the probability of collision) = 1 - (the probability of no collision)
+                               = 1 - (the probability of walking in one direction)
+                               = 1 - (½*½*½ + ½*½*½)
+                               = 1 - (½)²
+                               = ¾
+
+For n-vertex polygon,
+(the probability of collision) = 1 - (the probability of no collision)
+                               = 1 - (the probability of walking in one direction)
+                               = 1 - (½*½*½ + ½*½*½)
+                               = 1 - (½)ⁿ⁻¹
