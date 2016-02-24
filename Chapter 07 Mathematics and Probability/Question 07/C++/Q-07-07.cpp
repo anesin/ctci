@@ -18,8 +18,8 @@ inline void push_back(vector<int> &numbers, unsigned int i, int n)
 		numbers.push_back(n);
 }
 
-// Time Complexicity: O(N*log(N))
-// Space Complexicity: O(N)
+// Time Complexity: O(N*log(N))
+// Space Complexity: O(N)
 int find_number(unsigned int k)
 {
 	vector<int> numbers;
@@ -37,15 +37,43 @@ int find_number(unsigned int k)
 	return numbers[k];
 }
 
+// Time Complexity: O(N)
+// Space Complexity: O(N)
+int find_number_adv(unsigned int k)
+{
+	vector<int> numbers;
+	numbers.reserve(k);
+	numbers.push_back(1);
+
+	int multiple3 = 3, index3 = 0;
+	int multiple5 = 5, index5 = 0;
+	int multiple7 = 7, index7 = 0;
+
+	for (unsigned int i = 1; i <= k; ++i) {
+		int n = min(multiple3, min(multiple5, multiple7));
+		numbers.push_back(n);
+
+		if (multiple3 == n)
+			multiple3 = numbers[++index3] * 3;
+		if (multiple5 == n)
+			multiple5 = numbers[++index5] * 5;
+		if (multiple7 == n)
+			multiple7 = numbers[++index7] * 7;
+	}
+
+	return numbers[k];
+}
+
 
 void test(unsigned int k)
 {
-	cout << "The " << k << "th number: " << find_number(k) << endl;
+	cout << "The " << k << "th number: " << find_number(k)
+						<< ", " << find_number_adv(k) << endl;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	for (int i = 0; i < 50; ++i)
+	for (int i = 0; i <= 100; ++i)
 		test(i);
 	return 0;
 }
