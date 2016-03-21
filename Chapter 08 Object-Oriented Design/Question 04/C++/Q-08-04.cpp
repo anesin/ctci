@@ -3,16 +3,20 @@
 //
 
 #include "stdafx.h"
-#include <array>
 #include <map>
 #include <chrono>
+#include "time.h"
+#include <bitset>
+#include <thread>
+#include <iostream>
 
 using namespace std;
 using namespace std::chrono;
 
+#define MINUTES  milliseconds  // minutes
 
 typedef struct {
-	minutes min;
+	MINUTES min;
 	int price;
 } Price;
 
@@ -25,11 +29,13 @@ public:
 			: base_(base), unit_(unit) {}
 	virtual ~PricePolicy() {}
 
-	virtual int calculate(const minutes &term) {
+	virtual int calculate(const MINUTES &term) {
+		cout << "[calculate] term = " << term.count() << endl;
 		if (term < base_.min)
 			return base_.price;
 		auto rest = term - base_.min;
-		return (rest + unit_.min - minutes(1))/unit_.min*unit_.price;
+		cout << "[calculate] rest = " << rest.count() << endl;
+		return (rest + unit_.min - MINUTES(1))/unit_.min*unit_.price;
 	}
 };
 
@@ -63,6 +69,7 @@ public:
 		if (full() || entries_.find(number) != entries_.end())
 			return false;
 		entries_[number] = system_clock::now();
+		return true;
 	}
 
 	int exit(int number) {
@@ -70,15 +77,40 @@ public:
 			return 0;
 		auto in = entries_[number];
 		auto out = system_clock::now();
-		auto term = duration_cast<minutes>(out - in);
+		auto term = duration_cast<MINUTES>(out - in);
 		return price_policy_.calculate(term);
 	}
 };
 
 
+#define NUM_CARS  10
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	Price base = {MINUTES(60), 2};
+	Price unit = {MINUTES(10), 1};
+	PricePolicy price_policy(base, unit);
+	ParkingLot parking_lot(5, price_policy);
+
+	bitset<NUM_CARS> cars;  // 0: ready, 1: parking
+	cars.reset();
+
+	srand(static_cast<unsigned>(time(NULL)));
+	for (int i = 0; i < 50; ++i) {
+		int j = rand()%NUM_CARS;
+		if (cars[j]) {
+			cars.set(j, false);
+			int fee = parking_lot.exit(j);
+			cout << "exit car" << j <<" - $" << fee << endl;
+		} else {
+			if (parking_lot.entry(j)) {
+				cout << "park car" << j << endl;
+				cars.set(j);
+			}
+		}
+		this_thread::sleep_for(nanoseconds(1));
+	}
+
 	return 0;
 }
 
