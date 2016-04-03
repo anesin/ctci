@@ -20,8 +20,8 @@ typedef enum {
 	kLeft = 0, kTop, kRight, kBottom, kOrientationMax = 4
 }  orientation;
 
-orientation opposite(orientation o) {
-	switch (o) {
+orientation change(int i) {  // orientation
+	switch (i) {
 	case kLeft:    return kRight;
 	case kRight:   return kTop;
 	case kTop:     return kBottom;
@@ -93,9 +93,9 @@ public:
 	}
 
 	bool is_corner() {
-		for (orientation o = kLeft; o < kOrientationMax; o = opposite(o)) {
-			shape now = edges_[o].get_shape();
-			shape next = edges_[opposite(o)].get_shape();
+		for (int i = kLeft; i < kOrientationMax; ++i) {
+			shape now = edges_[i].get_shape();
+			shape next = edges_[change(i)].get_shape();
 			if (now == kFlat && next == kFlat)
 				return true;
 		}
@@ -103,15 +103,15 @@ public:
 	}
 
 	bool is_border() {
-		for (orientation o = kLeft; o < kOrientationMax; o = opposite(o)) {
-			if (edges_[o].get_shape() == kFlat)
+		for (int i = kLeft; i < kOrientationMax; ++i) {
+			if (edges_[i].get_shape() == kFlat)
 				return true;
 		}
 		return false;
 	}
 
-	const edge & get_edge_with_orientation(orientation o) {
-		return edges_[o];
+	const edge & get_edge_with_orientation(int i) {  // orientation
+		return edges_[i];
 	}
 
 	edge * get_matching_edge(const edge &target) {
@@ -141,26 +141,26 @@ public:
 };
 
 
-template<size_t SIZE>
 class jigsaw
 {
-	vector<vector<piece>> table_;  // SIZE * SIZE
+	int size_;
+	vector<vector<piece>> table_;  // size_ * size_
 
 public:
-	jigsaw() : table_(SIZE, vector<piece>()) {}
+	jigsaw(int size) : table_(size, vector<piece>()) {}
 
 	list<piece *> init_puzzle() {
 		list<piece *> pieces;
-		for (int row = 0; row < SIZE; ++row) {
-			for (int col = 0; col < SIZE; ++col) {
+		for (int row = 0; row < size_; ++row) {
+			for (int col = 0; col < size_; ++col) {
 				vector<edge> edges;
 				table_[row].push_back(piece(edges));
 			}
 		}
 
-		for (int row = 0; row < SIZE; ++row) {
-			for (int col = 0; col < SIZE; ++col) {
-				piece *p = table_[row][col];
+		for (int row = 0; row < size_; ++row) {
+			for (int col = 0; col < size_; ++col) {
+				piece *p = &table_[row][col];
 				int rotations = rand() % kOrientationMax;
 				p->rotate_edges_by(rotations);
 				pieces.push_back(p);
@@ -178,8 +178,8 @@ public:
 								table_[row][col - 1].get_edge_with_orientation(kRight).create_matching_edge();
 		edge top = (row == 0)? edge(kFlat, key + "v|e"):
 								table_[row - 1][col].get_edge_with_orientation(kBottom).create_matching_edge();
-		edge right = (col == SIZE - 1)? edge(kFlat, key + "h|e"): create_random_edge(key + "h");
-		edge bottom = (row == SIZE - 1)? edge(kFlat, key + "v|e"): create_random_edge(key + "v");
+		edge right = (col == size_ - 1)? edge(kFlat, key + "h|e"): create_random_edge(key + "h");
+		edge bottom = (row == size_ - 1)? edge(kFlat, key + "v|e"): create_random_edge(key + "v");
 		vector<edge> edges{left, top, right, bottom};
 		return edges;
 	}
@@ -278,7 +278,7 @@ private:
 		edge *e = get_matching_edge(edge_to_match, pieces);
 		if (e == NULL)
 			return false;
-		orientation o = opposite(orientation_to_match);
+		orientation o = change(orientation_to_match);
 		set_edge_in_solution(pieces, e, row, col, o);
 		return true;
 	}
@@ -286,9 +286,9 @@ private:
 	void orient_top_left_corner(piece *p) {
 		if (!p->is_corner())
 			return;
-		for (orientation o = kLeft; o < kOrientationMax; o = opposite(o)) {
-			edge now = p->get_edge_with_orientation(o);
-			edge next = p->get_edge_with_orientation(opposite(o));
+		for (int i = kLeft; i < kOrientationMax; ++i) {
+			edge now = p->get_edge_with_orientation(i);
+			edge next = p->get_edge_with_orientation(change(i));
 			if (now.get_shape() == kFlat && next.get_shape() == kFlat) {
 				p->set_edges_as_orientation(&now, kLeft);
 				return;
@@ -318,7 +318,7 @@ private:
 int _tmain(int argc, _TCHAR* argv[])
 {
 	const static int kSize = 2;
-	jigsaw<kSize> puzzle;
+	jigsaw puzzle(kSize);
 	list<piece *> pieces = puzzle.init_puzzle();
 	solver user(kSize, pieces);
 	bool result = user.solve();
