@@ -8,7 +8,8 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <ctime>
+#include <chrono>  // system_clock
+#include <random>  // default_random_engine
 #include <algorithm>
 #include <numeric>
 #include <iostream>
@@ -18,9 +19,9 @@ using namespace std;
 
 typedef enum {
 	kLeft = 0, kTop, kRight, kBottom, kOrientationMax = 4
-}  orientation;
+}  Orientation;
 
-orientation change(int i) {  // orientation
+Orientation Change(int i) {  // orientation
 	switch (i) {
 	case kLeft:    return kRight;
 	case kRight:   return kTop;
@@ -33,9 +34,9 @@ orientation change(int i) {  // orientation
 
 typedef enum {
 	kInner, kOuter, kFlat, kShapeMax
-} shape;
+} Shape;
 
-shape opposite(shape s) {
+Shape Opposite(Shape s) {
 	switch (s) {
 	case kInner:  return kOuter;
 	case kOuter:  return kInner;
@@ -43,97 +44,104 @@ shape opposite(shape s) {
 	return kShapeMax;
 }
 
-class piece;
 
-class edge
+class Piece;
+
+class Edge
 {
-	shape shape_;
+	Shape shape_;
 	string code_;
-	piece *parent_;
+	Piece *parent_;
 
 public:
-	edge(shape s, const string &code) : shape_(s), code_(code) {}
+	Edge(Shape s, const string &code) : shape_(s), code_(code) {}
 	
-	edge * create_matching_edge() {
-		return (shape_ == kFlat)? NULL: new edge(opposite(shape_), code_);
+	Edge * CreateMatchingEdge() {
+		return (shape_ == kFlat)? NULL: new Edge(Opposite(shape_), code_);
 	}
-	bool fits_with(const edge &e) const { return e.code_ == code_; }
-	void set_parent(piece *parent) { parent_ = parent; }
-	piece * parent() { return parent_; }
-	shape get_shape() const { return shape_; }
+	bool FitsWith(const Edge *e) const { return e->code_ == code_; }
+	void set_parent(Piece *parent) { parent_ = parent; }
+	Piece * parent() { return parent_; }
+	Shape shape() const { return shape_; }
 	const string & to_string() const { return code_; }
 };
 
 
-class piece
+class Piece
 {
 	static const int kNumberOfEgdes = kOrientationMax;
-	vector<edge> edges_;  // kNumberOfEgdes
+	vector<Edge *> edges_;  // kNumberOfEgdes
 
 public:
-	piece(vector<edge> edges) {
+	Piece(vector<Edge *> edges) {
 		edges_.swap(edges);
-		for_each(edges_.begin(), edges_.end(), [&](edge &e) {
-			e.set_parent(this);
-		});
+		for (auto edge : edges_) {
+			if (edge)
+				edge->set_parent(this);
+		}
+	}
+	~Piece() {
+		for (auto edge : edges_)
+			delete edge;
 	}
 
-	void set_edges_as_orientation(edge *e, orientation o) {
-		rotate_edges_by(o - get_orientation(e));
+	void SetEdgesAsOrientation(Edge *edge, Orientation o) {
+		RotateEdgesBy(o - GetOrientation(edge));
 	}
 
-	void rotate_edges_by(int rotations) {
-		vector<edge> rotated;
+	void RotateEdgesBy(int rotations) {
+		vector<Edge *> rotated;
 		rotations %= kNumberOfEgdes;
 		for (int i = 0; i < kNumberOfEgdes; ++i) {
 			int old = (i - rotations + kNumberOfEgdes)%kNumberOfEgdes;
 			rotated[i] = edges_[old];
 		}
-		rotated.swap(edges_);
+		edges_.swap(rotated);
 	}
 
-	bool is_corner() {
+	bool IsCorner() {
 		for (int i = kLeft; i < kOrientationMax; ++i) {
-			shape now = edges_[i].get_shape();
-			shape next = edges_[change(i)].get_shape();
+			Shape now = edges_[i]->shape();
+			Shape next = edges_[Change(i)]->shape();
 			if (now == kFlat && next == kFlat)
 				return true;
 		}
 		return false;
 	}
 
-	bool is_border() {
+	bool IsBorder() {
 		for (int i = kLeft; i < kOrientationMax; ++i) {
-			if (edges_[i].get_shape() == kFlat)
+			if (edges_[i]->shape() == kFlat)
 				return true;
 		}
 		return false;
 	}
 
-	const edge & get_edge_with_orientation(int i) {  // orientation
+	Edge * GetEdgeWithOrientation(int i) {  // orientation
 		return edges_[i];
 	}
 
-	edge * get_matching_edge(const edge &target) {
-		vector<edge>::iterator it = find_if(edges_.begin(), edges_.end(), [&](edge &e) -> bool {
-			return target.fits_with(e);
+	Edge * GetMatchingEdge(const Edge &target) {
+		vector<Edge *>::iterator it = find_if(edges_.begin(), edges_.end(), [&](Edge *edge) -> bool {
+			return target.FitsWith(edge);
 		});
-		return (it != edges_.end())? &(*it): NULL;
+		return (it != edges_.end())? *it: NULL;
 	}
 
 private:
-	orientation get_orientation(const edge *e) {
+	Orientation GetOrientation(const Edge *e) {
 		for (int i = 0; i < kNumberOfEgdes; ++i) {
-			if (&edges_[i] == e)
-				return static_cast<orientation>(i);
+			if (edges_[i] == e)
+				return static_cast<Orientation>(i);
 		}
+		return kOrientationMax;
 	}
 
 public:
 	string to_string() {
 		string s = "[";
-		for_each(edges_.begin(), edges_.end(), [&](const edge &e) {
-			s += e.to_string() + ",";
+		for_each(edges_.begin(), edges_.end(), [&](const Edge *e) {
+			s += e->to_string() + ",";
 		});
 		s += "]";
 		return s;
@@ -141,84 +149,89 @@ public:
 };
 
 
-class jigsaw
+class Jigsaw
 {
 	int size_;
-	vector<vector<piece>> table_;  // size_ * size_
+	vector<vector<Piece>> table_;  // size_ * size_
 
 public:
-	jigsaw(int size) : table_(size, vector<piece>()) {}
+	Jigsaw(int size) : table_(size, vector<Piece>()) {}
 
-	list<piece *> init_puzzle() {
-		list<piece *> pieces;
+	list<Piece *> InitPuzzle() {
+		vector<Piece *> pieces;
 		for (int row = 0; row < size_; ++row) {
 			for (int col = 0; col < size_; ++col) {
-				vector<edge> edges;
-				table_[row].push_back(piece(edges));
+				vector<Edge *> edges = CreateEdges(row, col);
+				table_[row].push_back(Piece(edges));
 			}
 		}
 
 		for (int row = 0; row < size_; ++row) {
 			for (int col = 0; col < size_; ++col) {
-				piece *p = &table_[row][col];
+				Piece *p = &table_[row][col];
 				int rotations = rand() % kOrientationMax;
-				p->rotate_edges_by(rotations);
+				p->RotateEdgesBy(rotations);
 				pieces.push_back(p);
 			}
 		}
-		srand(unsigned(time(0)));
-		random_shuffle(pieces.begin(), pieces.end());
-		return pieces;
+
+		unsigned seed = chrono::system_clock::now().time_since_epoch().count();
+		shuffle(pieces.begin(), pieces.end(), default_random_engine(seed));
+		return list<Piece *>(pieces.begin(), pieces.end());
 	}
 
-	vector<edge> create_edges(int row, int col) {
+	vector<Edge *> CreateEdges(int row, int col) {
 		string key = to_string(col) + ":" + to_string(row) + ":";
 
-		edge left = (col == 0)? edge(kFlat, key + "h|e"):
-								table_[row][col - 1].get_edge_with_orientation(kRight).create_matching_edge();
-		edge top = (row == 0)? edge(kFlat, key + "v|e"):
-								table_[row - 1][col].get_edge_with_orientation(kBottom).create_matching_edge();
-		edge right = (col == size_ - 1)? edge(kFlat, key + "h|e"): create_random_edge(key + "h");
-		edge bottom = (row == size_ - 1)? edge(kFlat, key + "v|e"): create_random_edge(key + "v");
-		vector<edge> edges{left, top, right, bottom};
-		return edges;
+		Edge *edges[kOrientationMax];
+		edges[kLeft] = (col == 0)? new Edge(kFlat, key + "h|e"): GetEdge(row, col - 1, kRight)->CreateMatchingEdge();
+		edges[kTop] = (row == 0)? new Edge(kFlat, key + "v|e"): GetEdge(row - 1, col, kBottom)->CreateMatchingEdge();
+		edges[kRight] = (col == size_ - 1)? new Edge(kFlat, key + "h|e"): CreateRandomEdge(key + "h");
+		edges[kBottom] = (row == size_ - 1)? new Edge(kFlat, key + "v|e"): CreateRandomEdge(key + "v");
+
+		return vector<Edge *>(&edges[0], &edges[0] + kOrientationMax);
 	}
 
-	edge create_random_edge(const string &code) {
+	Edge * CreateRandomEdge(const string &code) {
 		static bool random = true;
-		shape s = random? kInner: kOuter;
+		Shape s = random? kInner: kOuter;
 		random = !random;
-		return edge(s, code);
+		return new Edge(s, code);
+	}
+
+	Edge * GetEdge(int row, int col, Orientation o) {
+		return table_[row][col].GetEdgeWithOrientation(kRight);
 	}
 };
 
 
-class solver
+class Solver
 {
-	list<piece *> pieces_;
+	list<Piece *> pieces_;
 	int size_;
 
 	typedef enum {
 		kCorner, kBorder, kInside, kGroupMax
 	} group;
-	vector<vector<piece *>> solution_;
-	list<piece *> groups_[kGroupMax];
+	vector<vector<Piece *>> solution_;
+	list<Piece *> groups_[kGroupMax];
 
 public:
-	solver(int size, list<piece *> &pieces) : size_(size), solution_(size, vector<piece *>(size, NULL)) {
+	Solver(int size, list<Piece *> &pieces) : size_(size), solution_(size, vector<Piece *>(size, NULL)) {
 		pieces_.swap(pieces);
 	}
 
-	bool solve() {
-		group_pieces();
+	bool Solve() {
+		GroupPieces();
 
 		for (int row = 0; row < size_; ++row) {
 			for (int col = 0; col < size_; ++col) {
-				group g = get_piece_list_to_search(row, col);
-				if (!fit_next_edge(g, row, col))
+				group g = GetPieceListToSearch(row, col);
+				if (!FitNextEdge(g, row, col))
 					return false;
 			}
 		}
+		return true;
 	}
 
 	string to_string() {
@@ -233,23 +246,23 @@ public:
 	}
 
 private:
-	void group_pieces() {
+	void GroupPieces() {
 		for (auto &group : groups_)
 			group.clear();
 
-		for_each(pieces_.begin(), pieces_.end(), [&](piece *p) {
-			if (p->is_corner())
+		for_each(pieces_.begin(), pieces_.end(), [&](Piece *p) {
+			if (p->IsCorner())
 				groups_[kCorner].push_back(p);
-			else if (p->is_border())
+			else if (p->IsBorder())
 				groups_[kBorder].push_back(p);
 			else
 				groups_[kInside].push_back(p);
 		});
 	}
 
-	group get_piece_list_to_search(int row, int col) {
-		bool border_row = is_border(row);
-		bool border_col = is_border(col);
+	group GetPieceListToSearch(int row, int col) {
+		bool border_row = IsBorder(row);
+		bool border_col = IsBorder(col);
 		if (border_row && border_col)
 			return kCorner;
 		if (border_row || border_col)
@@ -257,57 +270,57 @@ private:
 		return kInside;
 	}
 
-	bool is_border(int location) {
+	bool IsBorder(int location) {
 		return location == 0 || location == size_ - 1;
 	}
 
-	bool fit_next_edge(group g, int row, int col) {
-		list<piece *> &pieces = groups_[g];
+	bool FitNextEdge(group g, int row, int col) {
+		list<Piece *> &pieces = groups_[g];
 		if (row == 0 && col == 0) {
-			piece *p = *pieces.begin();
+			Piece *p = *pieces.begin();
 			pieces.remove(p);
-			orient_top_left_corner(p);
+			OrientTopLeftCorner(p);
 			solution_[0][0] = p;
 			return true;
 		}
 
-		piece *piece_to_match = (col == 0)? solution_[row - 1][0]: solution_[row][col - 1];
-		orientation orientation_to_match = (col == 0)? kBottom: kRight;
-		edge edge_to_match = piece_to_match->get_edge_with_orientation(orientation_to_match);
+		Piece *piece_to_match = (col == 0)? solution_[row - 1][0]: solution_[row][col - 1];
+		Orientation orientation_to_match = (col == 0)? kBottom: kRight;
+		Edge *edge_to_match = piece_to_match->GetEdgeWithOrientation(orientation_to_match);
 
-		edge *e = get_matching_edge(edge_to_match, pieces);
+		Edge *e = GetMatchingEdge(edge_to_match, pieces);
 		if (e == NULL)
 			return false;
-		orientation o = change(orientation_to_match);
-		set_edge_in_solution(pieces, e, row, col, o);
+		Orientation o = Change(orientation_to_match);
+		SetEdgeInSolution(pieces, e, row, col, o);
 		return true;
 	}
 
-	void orient_top_left_corner(piece *p) {
-		if (!p->is_corner())
+	void OrientTopLeftCorner(Piece *p) {
+		if (!p->IsCorner())
 			return;
 		for (int i = kLeft; i < kOrientationMax; ++i) {
-			edge now = p->get_edge_with_orientation(i);
-			edge next = p->get_edge_with_orientation(change(i));
-			if (now.get_shape() == kFlat && next.get_shape() == kFlat) {
-				p->set_edges_as_orientation(&now, kLeft);
+			Edge *now = p->GetEdgeWithOrientation(i);
+			Edge *next = p->GetEdgeWithOrientation(Change(i));
+			if (now->shape() == kFlat && next->shape() == kFlat) {
+				p->SetEdgesAsOrientation(now, kLeft);
 				return;
 			}
 		}
 	}
 
-	edge * get_matching_edge(edge &target, list<piece *> &pieces) {
+	Edge * GetMatchingEdge(Edge *target, list<Piece *> &pieces) {
 		for (auto &p: pieces) {
-			edge *e = p->get_matching_edge(target);
+			Edge *e = p->GetMatchingEdge(*target);
 			if (e)
 				return e;
 		}
 		return NULL;
 	}
 
-	void set_edge_in_solution(list<piece *> &pieces, edge *e, int row, int col, orientation o) {
-		piece *p = e->parent();
-		p->set_edges_as_orientation(e, o);
+	void SetEdgeInSolution(list<Piece *> &pieces, Edge *e, int row, int col, Orientation o) {
+		Piece *p = e->parent();
+		p->SetEdgesAsOrientation(e, o);
 		pieces.remove(p);
 		solution_[row][col] = p;
 	}
@@ -318,10 +331,10 @@ private:
 int _tmain(int argc, _TCHAR* argv[])
 {
 	const static int kSize = 2;
-	jigsaw puzzle(kSize);
-	list<piece *> pieces = puzzle.init_puzzle();
-	solver user(kSize, pieces);
-	bool result = user.solve();
+	Jigsaw puzzle(kSize);
+	list<Piece *> pieces = puzzle.InitPuzzle();
+	Solver user(kSize, pieces);
+	bool result = user.Solve();
 	cout << user.to_string();
 	if (result)
 		cout << "SUCCESS" << endl;
