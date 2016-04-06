@@ -8,10 +8,9 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <chrono>  // system_clock
-#include <random>  // default_random_engine
-#include <algorithm>
-#include <numeric>
+#include <chrono>     // system_clock
+#include <random>     // default_random_engine
+#include <algorithm>  // shuffle
 #include <iostream>
 
 using namespace std;
@@ -93,10 +92,12 @@ private:
 
 public:
 	void SetEdgesAsOrientation(const Edge &edge, Orientation o) {
-		RotateEdgesBy(o - GetOrientation(edge));
+		RotateEdgesBy(GetOrientation(edge) - o);
 	}
 
-	void RotateEdgesBy(int rotations) {  // anticlockwise
+	void RotateEdgesBy(int rotations) {
+		if (rotations == 0)
+			return;
 		rotations %= kOrientationMax;
 		if (rotations < 0)
 			rotations += kOrientationMax;
@@ -125,8 +126,8 @@ public:
 		return false;
 	}
 
-	Edge & edge(Orientation o) {
-		return edges_[o];
+	Edge * edge(Orientation o) {
+		return (o == kOrientationMax)? NULL: &(edges_[o]);
 	}
 
 	Orientation GetMatchingEdge(const Edge &target) {
@@ -149,8 +150,13 @@ private:
 public:
 	string to_string() {
 		string s = "[";
-		for (auto &edge : edges_)
-			s += edge.code() + ",";
+		bool comma = false;
+		for (auto &edge : edges_) {
+			if (comma)
+				s += ",";
+			comma = true;
+			s += edge.code();
+		}
 		s += "]";
 		return s;
 	}
@@ -200,16 +206,20 @@ public:
 		const string key = to_string(col) + ":" + to_string(row) + ":";
 
 		Edge edges[kOrientationMax];
-		if (col == begin)  edges[kLeft].set_code(key + "h|e");
+		if (col == begin)  MakeCornerEdge(edges[kLeft], key + "h|e");
 		else               MakeMatchingEdge(edges[kLeft], row, col - 1, kRight);
-		if (row == begin)  edges[kTop].set_code(key + "v|e");
+		if (row == begin)  MakeCornerEdge(edges[kTop], key + "v|e");
 		else               MakeMatchingEdge(edges[kTop], row - 1, col, kBottom);
-		if (col == end)    edges[kRight].set_code(key + "h|e");
+		if (col == end)    MakeCornerEdge(edges[kRight], key + "h|e");
 		else               MakeRandomEdge(edges[kRight], key + "h");
-		if (row == end)    edges[kBottom].set_code(key + "v|e");
+		if (row == end)    MakeCornerEdge(edges[kBottom], key + "v|e");
 		else               MakeRandomEdge(edges[kBottom], key + "v");
 
 		return Piece(edges);
+	}
+
+	void MakeCornerEdge(Edge &edge, const string &code) {
+		edge.set_code(code);
 	}
 
 	void MakeRandomEdge(Edge &edge, const string &code) {
@@ -222,9 +232,9 @@ public:
 
 	void MakeMatchingEdge(Edge &edge, int row, int col, Orientation o) {
 		Piece &piece = table_[row][col];
-		Edge &e = piece.edge(o);
-		edge.set_shape(Opposite(e.shape()));
-		edge.set_code(e.code());
+		Edge *e = piece.edge(o);
+		edge.set_shape(Opposite(e->shape()));
+		edge.set_code(e->code());
 	}
 };
 
@@ -273,12 +283,8 @@ private:
 			group.clear();
 
 		for (auto piece : pieces_) {
-			if (piece->IsCorner())
-				groups_[kCorner].push_back(piece);
-			else if (piece->IsBorder())
-				groups_[kBorder].push_back(piece);
-			else
-				groups_[kInside].push_back(piece);
+			int i = piece->IsCorner() ? kCorner : piece->IsBorder() ? kBorder : kInside;
+			groups_[i].push_back(piece);
 		}
 	}
 
@@ -299,37 +305,32 @@ private:
 	bool FitNextEdge(int row, int col) {
 		group g = GetPieceListToSearch(row, col);
 		list<Piece *> &pieces = groups_[g];
+		Edge *edge = NULL;
+		Orientation o = kLeft;
 		if (row == 0 && col == 0) {
 			Piece *piece = *pieces.begin();
-			pieces.remove(piece);
-			OrientTopLeftCorner(piece);
-			solution_[0][0] = piece;
-			return true;
+			edge = piece->edge(piece->FindCorner());
+		}
+		else {
+			Piece *piece_to_match = (col == 0) ? solution_[row - 1][0] : solution_[row][col - 1];
+			Orientation orientation_to_match = (col == 0) ? kBottom : kRight;
+			Edge *edge_to_match = piece_to_match->edge(orientation_to_match);
+
+			edge = GetMatchingEdge(*edge_to_match, pieces);
+			o = Opposite(orientation_to_match);
 		}
 
-		Piece *piece_to_match = (col == 0)? solution_[row - 1][0]: solution_[row][col - 1];
-		Orientation orientation_to_match = (col == 0)? kBottom: kRight;
-		Edge &edge_to_match = piece_to_match->edge(orientation_to_match);
-
-		Edge *edge = GetMatchingEdge(edge_to_match, pieces);
 		if (edge == NULL)
 			return false;
-		Orientation o = Opposite(orientation_to_match);
 		SetEdgeInSolution(pieces, *edge, row, col, o);
 		return true;
-	}
-
-	void OrientTopLeftCorner(Piece *piece) {
-		Orientation o = piece->FindCorner();
-		if (o != kOrientationMax)
-			piece->RotateEdgesBy(o);
 	}
 
 	Edge * GetMatchingEdge(Edge &target, list<Piece *> &pieces) {
 		for (auto piece: pieces) {
 			Orientation o = piece->GetMatchingEdge(target);
 			if (o != kOrientationMax)
-				return &piece->edge(o);
+				return piece->edge(o);
 		}
 		return NULL;
 	}
@@ -346,16 +347,17 @@ private:
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	const static int kSize = 2;
-	Jigsaw jigsaw(kSize);
-	list<Piece *> pieces = jigsaw.InitPuzzle();
-	Solver user(pieces, kSize);
-	bool result = user.Solve();
-	cout << user.to_string();
-	if (result)
-		cout << "SUCCESS" << endl;
-	else
-		cout << "ERROR: " << to_string(kSize) << endl;
+	for (int i = 2; i < 10; ++i) {
+		Jigsaw jigsaw(i);
+		list<Piece *> pieces = jigsaw.InitPuzzle();
+		Solver user(pieces, i);
+		bool result = user.Solve();
+		cout << user.to_string();
+		if (result)
+			cout << "SUCCESS" << endl << endl;
+		else
+			cout << "ERROR: " << to_string(i) << endl << endl;
+	}
 
 	return 0;
 }
