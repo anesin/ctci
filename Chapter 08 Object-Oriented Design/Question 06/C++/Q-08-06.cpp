@@ -21,12 +21,12 @@ typedef enum {
 	kLeft = 0, kTop, kRight, kBottom, kOrientationMax = 4
 }  Orientation;
 
-Orientation Opposite(int i) {  // orientation
-	switch (i) {
+Orientation Opposite(Orientation o) {
+	switch (o) {
 	case kLeft:    return kRight;
-	case kRight:   return kTop;
+	case kRight:   return kLeft;
 	case kTop:     return kBottom;
-	case kBottom:  return kLeft;
+	case kBottom:  return kTop;
 	}
 	return kOrientationMax;
 }
