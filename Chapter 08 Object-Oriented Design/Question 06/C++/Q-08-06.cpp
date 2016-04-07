@@ -283,7 +283,9 @@ private:
 			group.clear();
 
 		for (auto piece : pieces_) {
-			int i = piece->IsCorner() ? kCorner : piece->IsBorder() ? kBorder : kInside;
+			int i = piece->IsCorner()? kCorner:
+					piece->IsBorder()? kBorder:
+									   kInside;
 			groups_[i].push_back(piece);
 		}
 	}
@@ -312,8 +314,8 @@ private:
 			edge = piece->edge(piece->FindCorner());
 		}
 		else {
-			Piece *piece_to_match = (col == 0) ? solution_[row - 1][0] : solution_[row][col - 1];
-			Orientation orientation_to_match = (col == 0) ? kBottom : kRight;
+			Piece *piece_to_match = (col == 0)? solution_[row - 1][0]: solution_[row][col - 1];
+			Orientation orientation_to_match = (col == 0)? kBottom: kRight;
 			Edge *edge_to_match = piece_to_match->edge(orientation_to_match);
 
 			edge = GetMatchingEdge(*edge_to_match, pieces);
@@ -326,7 +328,7 @@ private:
 		return true;
 	}
 
-	Edge * GetMatchingEdge(Edge &target, list<Piece *> &pieces) {
+	Edge * GetMatchingEdge(const Edge &target, list<Piece *> &pieces) {
 		for (auto piece: pieces) {
 			Orientation o = piece->GetMatchingEdge(target);
 			if (o != kOrientationMax)
