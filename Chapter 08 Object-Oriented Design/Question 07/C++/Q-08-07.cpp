@@ -21,51 +21,52 @@ class User
 
 public:
 	User(int id, const string &name) : id_(id), name_(name) {}
+	User(const User &user) : id_(user.id_), name_(user.name_) {}
 
 	int id() const { return id_; }
 	const string& name() const { return name_;  }
 };
 
+inline bool operator==(const User &lhs, const User &rhs) {
+	return lhs.id() == rhs.id() && lhs.name() == rhs.name();
+}
+
 
 class Database
 {
-	int id_;
 	vector<User> table_;
-	map<int, int> index_id_;       // map<user id, index of table>
-	map<string, int> index_name_;  // map<user name, index of table>
+	map<int, unsigned int> index_id_;       // map<user id, index of table>
+	map<string, unsigned int> index_name_;  // map<user name, index of table>
 
 public:
-	Database() : id_(0) {}
-
-	const vector<User> & table() {
+	const vector<User> & table() const {
 		return table_;
 	}
 
-	const User * Query(int id) {
-		map<int, int>::iterator it = index_id_.find(id);
+	int Query(int id) {
+		map<int, unsigned int>::iterator it = index_id_.find(id);
 		if (it == index_id_.end())
-			return NULL;
-		return &table_[it->second];
+			return -1;
+		return it->second;
 	}
 
-	const User * Query(string &name) {
-		map<string, int>::iterator it = index_name_.find(name);
+	int Query(const string &name) {
+		map<string, unsigned int>::iterator it = index_name_.find(name);
 		if (it == index_name_.end())
-			return NULL;
-		return &table_[it->second];
+			return -1;
+		return it->second;
 	}
 
-	int AddUser(string &name) {
-		if (index_name_.find(name) == index_name_.end())
-			return 0;
+	int AddUser(int id, const string &name) {
+		if (Query(id) >= 0 || Query(name) >= 0)
+			return -1;
 
-		int id = ++id_;
 		User user(id, name);
 		int index = table_.size();
 		table_.push_back(user);
 		index_id_[id] = index;
 		index_name_[name] = index;
-		return id;
+		return index;
 	}
 };
 
@@ -73,12 +74,12 @@ public:
 class Conversation
 {
 	vector<const User *> members_;
-	map<int, int> index_id_;
+	map<int, unsigned int> index_id_;
 
 public:
 	Conversation(vector<const User *> &members) {
-		for (auto user : members)
-			AddMember(*user);
+		for (auto member : members)
+			AddMember(*member);
 	}
 
 	void destroy() const { delete this;  }
@@ -87,6 +88,8 @@ private:
 	~Conversation() {}
 
 public:
+	const vector<const User *> & members() const { return members_; }
+
 	int AddMember(const User &user) {
 		int id = user.id();
 		int size = members_.size();
@@ -94,7 +97,7 @@ public:
 			return size;
 		index_id_[id] = size;
 		members_.push_back(&user);
-		return  members_.size();
+		return members_.size();
 	}
 
 	int RemoveMember(const User &user) {
@@ -115,9 +118,10 @@ class Member : public User
 
 public:
 	Member(int id, const string &name) : User(id, name) {}
+	Member(const User &user) : User(user) {}
 
-	vector<const Member *> & friends() { return friends_; }
-	vector<Conversation *> & conversations() { return conversations_; }
+	const vector<const Member *> & friends() const { return friends_; }
+	const vector<Conversation *> & conversations() const { return conversations_; }
 
 	void AddFriend(const Member *user) {
 		vector<const Member *>::iterator it = find(friends_.begin(), friends_.end(), user);
@@ -187,6 +191,44 @@ public:
 			(*it)->RemoveMember(*this);
 			conversations_.erase(it);
 		}
+	}
+};
+
+
+class Controller
+{
+	Database db_;
+	vector<Member> members_;
+	list<Conversation *> conversations_;
+
+public:
+	bool AddUser(const string &name) {
+		static int id = 0;
+
+		int index = db_.AddUser(++id, name);
+		if (index < 0)
+			return false;
+
+		const vector<User> &users = db_.table();
+		members_.push_back(Member(users[index]));
+		return members_.size() == index + 1;
+	}
+
+	Conversation * CreateConversation(const vector<int> &id_list) {
+		vector<Member *> members;
+		int count = members_.size();
+		for (auto id : id_list) {
+			int index = db_.Query(id);
+			if (0 <= index && index < count)
+				members.push_back(&members_[index]);
+		}
+
+		vector<const User *> users(members.begin(), members.end());
+		Conversation *conversation = new Conversation(users);
+		for (auto member : members)
+			member->EnterConversation(*conversation);
+		conversations_.push_back(conversation);
+		return conversation;
 	}
 };
 
