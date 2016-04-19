@@ -10,8 +10,10 @@
 #include <map>
 #include <list>
 #include <algorithm>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 
 class User
@@ -71,125 +73,176 @@ public:
 };
 
 
-class Conversation
+class Message
 {
-	vector<const User *> members_;
-	map<int, unsigned int> index_id_;
+	string name_;
+	string content_;
+	time_point<system_clock> time_;
 
 public:
-	Conversation(vector<const User *> &members) {
+	Message(const string &name, const string &content) : name_(name), content_(content) {
+		time_ = system_clock::now();
+	}
+	Message(const Message &message) : name_(message.name_), content_(message.content_), time_(message.time_) {}
+
+	const string & name() { return name_; }
+	const string & content() { return content_; }
+	const time_point<system_clock> & time() { return time_; }
+};
+
+
+class IChatServer
+{
+public:
+	virtual void AddMember(const User &member) = 0;
+	virtual void RemoveMember(const User &member) = 0;
+	virtual Message SyncMessage(const User &user, const string &content) = 0;
+};
+
+class IChatClient
+{
+public:
+	virtual void AddMember(const User &member) = 0;
+	virtual void RemoveMember(const User &member) = 0;
+	virtual void ReceiveMessage(const Message &message) = 0;
+};
+
+
+class Chatting : public IChatClient
+{
+	IChatServer *server_;
+	vector<const User *> members_;
+	map<int, unsigned int> index_id_;
+	vector<Message> messages_;
+
+public:
+	Chatting(IChatServer *server) : server_(server) {}
+	~Chatting() {}
+
+	const vector<const User *> & members() const { return members_; }
+	const vector<Message> & messages() const { return messages_; }
+
+	void AddMembers(const vector<const User *> &members) {
 		for (auto member : members)
 			AddMember(*member);
 	}
 
-	void destroy() const { delete this;  }
-
-private:
-	~Conversation() {}
-
-public:
-	const vector<const User *> & members() const { return members_; }
-
-	int AddMember(const User &user) {
-		int id = user.id();
+	void AddMember(const User &member) {
+		int id = member.id();
 		int size = members_.size();
 		if (index_id_.find(id) != index_id_.end())
-			return size;
+			return;
 		index_id_[id] = size;
-		members_.push_back(&user);
-		return members_.size();
+		members_.push_back(&member);
+		server_->AddMember(member);
 	}
 
-	int RemoveMember(const User &user) {
-		int id = user.id();
+	void RemoveMember(const User &member) {
+		int id = member.id();
 		if (index_id_.find(id) != index_id_.end()) {
 			members_.erase(members_.begin() + index_id_[id]);
 			index_id_.erase(id);
 		}
-		return members_.size();
+		server_->RemoveMember(member);
+	}
+
+	void SendMessage(const User &member, const string &content) {
+		Message message = server_->SyncMessage(member, content);
+		messages_.push_back(message);
+	}
+
+	virtual void ReceiveMessage(const Message &message) {
+		messages_.push_back(message);
 	}
 };
 
 
 class Member : public User
 {
-	vector<const Member *> friends_;
-	vector<Conversation *> conversations_;
+	vector<const User *> friends_;
+	vector<Chatting> chattings_;
 
 public:
 	Member(int id, const string &name) : User(id, name) {}
 	Member(const User &user) : User(user) {}
 
-	const vector<const Member *> & friends() const { return friends_; }
-	const vector<Conversation *> & conversations() const { return conversations_; }
+	const vector<const User *> & friends() const { return friends_; }
 
-	void AddFriend(const Member *user) {
-		vector<const Member *>::iterator it = find(friends_.begin(), friends_.end(), user);
+	void AddFriend(const User *user) {
+		vector<const User *>::iterator it = find(friends_.begin(), friends_.end(), user);
 		if (it == friends_.end())
 			friends_.push_back(user);
 	}
 
-	void RemoveFriend(const Member *user) {
-		vector<const Member *>::iterator it = find(friends_.begin(), friends_.end(), user);
-		if (it != friends_.end())
-			friends_.erase(it);
+	void RemoveFriend(unsigned int index) {
+		if (index < friends_.size())
+			friends_.erase(friends_.begin() + index);
 	}
 
-	Conversation * CreateConversation(const vector<unsigned int> &index_list) {
-		vector<const Member *> members;
+	const User * FindFriend(const string &name) {
+		for (auto user : friends_) {
+			if (user->name() == name)
+				return user;
+		}
+		return NULL;
+	}
+
+	const vector<Chatting> & chats() const { return chattings_; }
+
+	void CreateChatting(const vector<unsigned int> &index_list) {
+		vector<const User *> members;
 		for (auto index : index_list) {
 			if (friends_.size() <= index)
-				return NULL;
+				return;
 			members.push_back(friends_[index]);
 		}
-		return CreateConversation(members);
+		CreateConversation(members);
 	}
 
-	Conversation * CreateConversation(unsigned int index) {
+	void CreateChatting(unsigned int index) {
 		if (friends_.size() <= index)
-			return NULL;
-		vector<const Member *> members;
+			return;
+		vector<const User *> members;
 		members.push_back(friends_[index]);
-		return CreateConversation(members);
+		CreateConversation(members);
 	}
 
 private:
-	Conversation * CreateConversation(vector<const Member *> &members) {
+	void CreateConversation(vector<const User *> &members) {
 		members.push_back(this);
 		vector<const User *> users(members.begin(), members.end());
-		Conversation *conversation = new Conversation(users);
+		Chatting *conversation = new Chatting(users);
 		for (auto member : members) {
 			auto m = const_cast<Member *>(member);
 			m->EnterConversation(*conversation);
 		}
-		conversations_.push_back(conversation);
-		return conversation;
+		chattings_.push_back(conversation);
 	}
 
 public:
 	bool InviteConversation(unsigned int index_conversation, unsigned int index_member) {
-		if (conversations_.size() <= index_conversation || friends_.size() <= index_member)
+		if (chattings_.size() <= index_conversation || friends_.size() <= index_member)
 			return false;
-		Conversation *conversation = conversations_[index_conversation];
-		Member *member = const_cast<Member *>(friends_[index_member]);
+		Chatting *conversation = chattings_[index_conversation];
+		User *member = const_cast<User *>(friends_[index_member]);
 		conversation->AddMember(*member);
 		member->EnterConversation(*conversation);
 		return true;
 	}
 
-	void EnterConversation(Conversation &conversation) {
-		auto it = find(conversations_.begin(), conversations_.end(), &conversation);
-		if (it == conversations_.end()) {
+	void EnterConversation(Chatting &conversation) {
+		auto it = find(chattings_.begin(), chattings_.end(), &conversation);
+		if (it == chattings_.end()) {
 			(*it)->AddMember(*this);
-			conversations_.push_back(&conversation);
+			chattings_.push_back(&conversation);
 		}
 	}
 
-	void ExitConversation(Conversation &conversation) {
-		auto it = find(conversations_.begin(), conversations_.end(), &conversation);
-		if (it != conversations_.end()) {
+	void ExitConversation(Chatting &conversation) {
+		auto it = find(chattings_.begin(), chattings_.end(), &conversation);
+		if (it != chattings_.end()) {
 			(*it)->RemoveMember(*this);
-			conversations_.erase(it);
+			chattings_.erase(it);
 		}
 	}
 };
@@ -199,7 +252,7 @@ class Controller
 {
 	Database db_;
 	vector<Member> members_;
-	list<Conversation *> conversations_;
+	list<Chatting *> chattings_;
 
 public:
 	bool AddUser(const string &name) {
@@ -214,7 +267,7 @@ public:
 		return members_.size() == index + 1;
 	}
 
-	Conversation * CreateConversation(const vector<int> &id_list) {
+	Chatting * CreateConversation(const vector<int> &id_list) {
 		vector<Member *> members;
 		int count = members_.size();
 		for (auto id : id_list) {
@@ -224,10 +277,10 @@ public:
 		}
 
 		vector<const User *> users(members.begin(), members.end());
-		Conversation *conversation = new Conversation(users);
+		Chatting *conversation = new Chatting(users);
 		for (auto member : members)
 			member->EnterConversation(*conversation);
-		conversations_.push_back(conversation);
+		chattings_.push_back(conversation);
 		return conversation;
 	}
 };
