@@ -9,6 +9,8 @@
 using namespace std;
 
 
+// time complexity: O(N)
+// space complexity: O(1)
 unsigned long CountRunUp(int n)
 {
 	if (n <= 0)
