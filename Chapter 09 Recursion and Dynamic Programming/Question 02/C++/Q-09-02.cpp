@@ -7,7 +7,9 @@
 //	 Design an algorithm to find a path for the robot from the top left to the bottom right.
 //
 
+#include "stdafx.h"
 #include <vector>
+#include <algorithm>
 #include <time.h>
 #include <iostream>
 #include <iomanip>
@@ -139,7 +141,8 @@ protected:
 };
 
 
-int main(int argc, const char * argv[]) {
+int _tmain(int argc, _TCHAR* argv[])
+{
 #if 0
 	RecursivePath path;
 #else
