@@ -1,0 +1,3 @@
+Use DBMS. When the information is small, we could select SQLite, or realm. But in this case, the clients cannot modify information.
+JSON(or XML) is standard format on the network. I don't wanna discuss which is better.
+This system must service up to 1,000 client applications. So we'd better building on the web because of scalability. But the cloud is excessive.
