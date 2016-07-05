@@ -1,0 +1,4 @@
+Include the basic information of friends into the user information; name, gender and so on.
+Because servers must be distributed around world in the case of a very large system, it also contains the information of server.
+In terms of performance, when the distance between people is very far, the informations of people are likely to be located differently.
+In this case it's better storing duplicated data and syncronizing.
