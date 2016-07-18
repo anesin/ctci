@@ -42,6 +42,8 @@ public:
 			delete bits_[i];
 	}
 
+	// time complexity: O(n)
+	// space complexity: O(n)
 	int generate() {
 		for ( ; 0 <= step_ && step_ < kStep; ++step_) {
 			int start = step_*kMax;
@@ -82,6 +84,8 @@ public:
 		delete bits_;
 	}
 
+	// time complexity: O(n)
+	// space complexity: O(m)
 	int generate() {
 		if (index_ == INT_MAX)
 			return -1;
