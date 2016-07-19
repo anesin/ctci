@@ -1,0 +1,11 @@
+At first, I only think about hash by URL or contents. The following is extracted detail method from a book.
+
+
+We have a database which stores a list of items we need to crawl. On each iteration, we select the highest priority page to crawl. We then do the following:
+
+  1. Open up the page and create a signature of the page based on specific subsections of the page and its URL.
+  2. Query the database to see whether anything with this signature has been crawled recently.
+  3. If something with this signature has been recently crawled, insert this page back into the database at a low priority.
+  4. If not, crawl the page and insert its links into the database.
+
+Under the above implementation, we never "complete" crawling the web, but we will avoid getting stuck in a loop of pages. If we want to allow for the possibility of "finishing" crawling the web (which would clearly happen only if the "web" were actually a smaller system, like an intranet), then we can set a minimum priority that a page must have to be crawled.
