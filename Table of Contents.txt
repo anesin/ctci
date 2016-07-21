@@ -10,10 +10,9 @@ Concepts and Algorithms
 	Chapter 5 Bit Manipulation
 	Chapter 6 Brain Teasers
 	Chapter 7 Mathematics and Probability
-
-Chapters Object-Oriented Design
+	Chapter 8 Object-Oriented Design
 	Chapter 9 Recursion and Dynamic Programming
-	Chapter 10 Scalability and Memory Limits Ill
+	Chapter 10 Scalability and Memory Limits
 	Chapter 11 Sorting and Searching
 	Chapter 12 Testing
 
