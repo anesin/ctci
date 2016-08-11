@@ -31,17 +31,21 @@ bool operator<(const Person &lhs, const Person &rhs) {
 	return lhs.height < rhs.height && lhs.weight < rhs.weight;
 }
 
-// time complexity: O(n²)
-// space complexity: O(n)
-vector<Person> LongestTower(const vector<Person> &people)
+typedef vector<Person> Sequence;
+typedef vector<Sequence> Sequences;
+typedef Sequences::iterator Sequences_Iter;
+
+
+// Wrong!!!
+Sequence LongestTower(const Sequence &people)
 {
-	vector<Person> candidates(people);
-	sort(candidates.begin(), candidates.end(), [&](const Person &lhs, const Person &rhs) {
+	Sequence candidates(people);
+	sort(candidates.begin(), candidates.end(), [](const Person &lhs, const Person &rhs) {
 		return lhs.height*lhs.weight < rhs.height*rhs.weight;
 	});
 
-	vector<Person> solution;
-	vector<Person> temp;
+	Sequence solution;
+	Sequence temp;
 	int size = candidates.size();
 	for (int i = 0; i < size - 1; ++i) {
 		temp.clear();
@@ -62,13 +66,81 @@ vector<Person> LongestTower(const vector<Person> &people)
 
 
 
+Sequences_Iter SeqWithMaxLength(Sequences_Iter seq1, Sequences_Iter seq2, Sequences_Iter end)
+{
+	if (seq1 == end || seq1->empty())
+		return seq2;
+	if (seq2 == end || seq2->empty())
+		return seq1;
+	return seq1->size() > seq2->size()? seq1: seq2;
+}
+
+void LongestIncreasingSubsequence(const Sequence &seq, Sequences &solutions)
+{
+	const size_t index = solutions.size();
+	if (seq.size() <= index)
+		return;
+
+	const Person &person = seq[index];
+	Sequences_Iter begin = solutions.begin();
+	Sequences_Iter end = solutions.end();
+
+	Sequences_Iter longest = end;
+	for (size_t i = 0; i < index; ++i) {
+		if (seq[i].weight < person.weight)
+			longest = SeqWithMaxLength(longest, begin + i, end);
+	}
+
+	vector<Person> sol;
+	if (longest != end)
+		sol = *longest;
+	sol.push_back(person);
+
+	solutions.push_back(sol);
+	LongestIncreasingSubsequence(seq, solutions);
+}
+
+Sequence LongestIncreasingSubsequence(const Sequence &seq)
+{
+	Sequences solutions;
+	solutions.reserve(seq.size());
+	LongestIncreasingSubsequence(seq, solutions);
+
+	Sequences_Iter longest = solutions.end();
+	for (auto it = solutions.begin(); it != solutions.end(); ++it)
+		longest = SeqWithMaxLength(longest, it, solutions.end());
+	return *longest;
+}
+
+// time complexity: O(n²)
+// space complexity: O(n)
+Sequence GetIncreasingSequence(const Sequence &people)
+{
+	Sequence seq(people);
+	sort(seq.begin(), seq.end(), [](const Person &lhs, const Person &rhs) {
+		return lhs.height < rhs.height;
+	});
+	return LongestIncreasingSubsequence(seq);
+}
+
+
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	Person people[] = {{65, 100}, {70, 150}, {56, 90}, {75, 190}, {60, 95}, {68, 110}};
-	vector<Person> solution = LongestTower(vector<Person>(people, people + sizeof(people)/sizeof(people[0])));
+	Person people[] = {{70, 110}, {65, 120}, {72, 150}, {56, 90}, {69, 105}, {75, 190}, {60, 105}, {68, 100}};
+	Sequence candidates(people, people + sizeof(people)/sizeof(people[0]));
 
-	cout << "The longest tower is length " << solution.size() << " and includes from top to bottom:" << endl;
-	for (auto person : solution)
+	// Wrong!!!
+// 	Sequence solution = LongestTower(candidates);
+// 	cout << "The longest tower is length " << solution.size() << " and includes from top to bottom:" << endl;
+// 	for (auto person : solution)
+// 		cout << "(" << person.height << ", " << person.weight << ") ";
+// 	cout << endl;
+
+	Sequence seq = GetIncreasingSequence(candidates);
+	cout << "The longest tower is length " << seq.size() << " and includes from top to bottom:" << endl;
+	for (auto person : seq)
 		cout << "(" << person.height << ", " << person.weight << ") ";
 	cout << endl;
 
