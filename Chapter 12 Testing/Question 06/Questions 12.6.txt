@@ -1,0 +1,1 @@
+12.6 How would you test an ATM in a distributed banking system?
