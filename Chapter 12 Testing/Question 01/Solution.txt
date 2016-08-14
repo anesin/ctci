@@ -1,0 +1,3 @@
+It must be whether changed the type of variable i into signed or for loop's condition into 'i > 0'.
+On the function printf, '%d' has no problem now, because the upper logic doesn't exceed the range.
+But you'd better change into '%u'.
