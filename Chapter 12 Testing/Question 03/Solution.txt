@@ -1,0 +1,7 @@
+1. Normal Case
+- the position which the piece class can move
+- the position which is not empty
+
+2. Exceptional Case
+- the position which the piece class cannot move
+- the position outside of the chessboard
