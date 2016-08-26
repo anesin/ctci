@@ -1,0 +1,3 @@
+1. The first thing to do on this question is to clarify assumptions. 
+2. Once we understand what the system looks like, we'll want to break down the problem into different testable components: logging in, withdrawing money, depositing money, checking balance, transferring money, and so on.
+3. We would probably want to use a mix of manual and automated testing.
