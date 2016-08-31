@@ -1,0 +1,21 @@
+A virtual method table (VMT), virtual function table, virtual call table, dispatch table, vtable, or vftable is a mechanism used in a programming language to support dynamic dispatch (or run-time method binding).
+
+Whenever a class defines a virtual function (or method), most compilers add a hidden member variable to the class which points to an array of pointers to (virtual) functions called the virtual method table (VMT or Vtable). These pointers are used at runtime to invoke the appropriate function implementations, because at compile time it may not yet be known if the base function is to be called or a derived one implemented by a class that inherits from the base class.
+
+Suppose a program contains several classes in an inheritance hierarchy: a superclass, Cat, and two subclasses, HouseCat and Lion. Class Cat defines a virtual function named speak, so its subclasses may provide an appropriate implementation (e.g. either meow or roar).
+
+When the program calls the speak method on a Cat pointer (which can point to a Cat class, or any subclass of Cat), the calling code must be able to determine which implementation to call, depending on the actual type of object that is pointed to. Because the type of object pointed to by the Cat pointer is not determined at compile-time, the decision as to which branch to take cannot be decided at compile-time.
+
+There are a variety of different ways to implement such dynamic dispatch, but the vtable (virtual table) solution is especially common among C++ and related languages (such as D and C#). Languages which separate the programmatic interface of objects from the implementation, like Visual Basic and Delphi, also tend to use the vtable approach, because it allows objects to use a different implementation simply by using a different set of method pointers.
+
+An object's dispatch table will contain the addresses of the object's dynamically bound methods. Method calls are performed by fetching the method's address from the object's dispatch table. The dispatch table is the same for all objects belonging to the same class, and is therefore typically shared between them. Objects belonging to type-compatible classes (for example siblings in an inheritance hierarchy) will have dispatch tables with the same layout: the address of a given method will appear at the same offset for all type-compatible classes. Thus, fetching the method's address from a given dispatch table offset will get the method corresponding to the object's actual class.
+
+The C++ standards do not mandate exactly how dynamic dispatch must be implemented, but compilers generally use minor variations on the same basic model.
+
+Typically, the compiler creates a separate vtable for each class. When an object is created, a pointer to this vtable, called the virtual table pointer, vpointer or VPTR, is added as a hidden member of this object. As such, the compiler must also generate "hidden" code in the constructor of each class to initialize a new objects' vpointer to the address of its class's vtable.
+
+Many compilers place the vpointer as the last member of the object; other compilers place the vpointer as the first member of the object; portable source code works either way. For example, g++ previously placed the vpointer at the end of the object.
+
+
+
+Excerpt From: "https://en.wikipedia.org/wiki/Virtual_method_table"
