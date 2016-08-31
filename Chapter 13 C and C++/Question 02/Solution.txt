@@ -1,0 +1,17 @@
+Q1. Compare and contrast a hash table and an STL map.
+
+Hash Table is an associative container that contains key-value pairs with unique keys. Search, insertion, and removal of elements have average constant-time complexity.
+
+STL map is a sorted associative container that contains key-value pairs with unique keys. Keys are sorted by using the comparison function Compare. Search, removal, and insertion operations have logarithmic complexity. Maps are usually implemented as red-black trees.
+
+
+
+Q2. How is a hash table implemented?
+
+The elements are not sorted in any particular order, but organized into buckets. Which bucket an element is placed into depends entirely on the hash of its key. This allows fast access to individual elements, since once the hash is computed, it refers to the exact bucket the element is placed into.
+
+
+
+Q3. If the number of inputs is small, which data structure options can be used instead of a hash table?
+
+Map or Binary Tree.
