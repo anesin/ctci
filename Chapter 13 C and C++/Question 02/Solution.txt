@@ -15,9 +15,3 @@ The elements are not sorted in any particular order, but organized into buckets.
 Q3. If the number of inputs is small, which data structure options can be used instead of a hash table?
 
 Map or Binary Tree.
-
-
-
-Excerpt From:
-	"http://en.cppreference.com/w/cpp/container/unordered_map"
-	"http://en.cppreference.com/w/cpp/container/map"
