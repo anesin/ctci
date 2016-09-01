@@ -1,0 +1,13 @@
+In computer programming, particularly in the C, C++, C#, and Java programming languages, the volatile keyword indicates that a value may change between different accesses, even if it does not appear to be modified. This keyword prevents an optimizing compiler from optimizing away subsequent reads or writes and thus incorrectly reusing a stale value or omitting writes. Volatile values primarily arise in hardware access (memory-mapped I/O), where reading from or writing to memory is used to communicate with peripheral devices, and in threading, where a different thread may have modified a value.
+
+Despite being a common keyword, the behavior of volatile differs significantly between programming languages, and is easily misunderstood. In C and C++, it is a type qualifier, like const, and is a property of the type. Furthermore, in C and C++ it does not work in most threading scenarios, and that use is discouraged.
+
+In C, and consequently C++, the volatile keyword was intended to
+	- allow access to memory mapped devices
+	- allow uses of variables between setjmp and longjmp
+	- allow uses of sig_atomic_t variables in signal handlers.
+Operations on volatile variables are not atomic, nor do they establish a proper happens-before relationship for threading. This is specified in the relevant standards (C, C++, POSIX, WIN32), and volatile variables are not threadsafe in the vast majority of current implementations. Thus, the usage of volatile keyword as a portable synchronization mechanism is discouraged by many C/C++ groups.
+
+
+
+Excerpt from: "https://en.wikipedia.org/wiki/Volatile_(computer_programming)"
