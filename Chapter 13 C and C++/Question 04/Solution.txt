@@ -1,0 +1,14 @@
+Shallow copies duplicate as little as possible. A shallow copy of a collection is a copy of the collection structure, not the elements. With a shallow copy, two collections now share the individual elements.
+
+vector<int> data(1, 100);
+vector<int> &shallow = data;
+
+
+Deep copies duplicate everything. A deep copy of a collection is two collections with all of the elements in the original collection duplicated.
+
+vector<int> data(1, 100);
+vector<int> deep(data.begin(), data.end());
+
+
+
+Excerpt From: "https://stackoverflow.com/questions/184710/what-is-the-difference-between-a-deep-copy-and-a-shallow-copy" without example
