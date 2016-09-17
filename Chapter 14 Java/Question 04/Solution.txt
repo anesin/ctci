@@ -1,0 +1,19 @@
+There is a big difference between them. In C++ you don't have to specify a class or an interface for the generic type. That's why you can create truly generic functions and classes, with the caveat of a looser typing.
+
+	template <typename T> T sum(T a, T b) { return a + b; }
+
+The method above adds two objects of the same type, and can be used for any type T that has the "+" operator available.
+
+In Java you have to specify a type if you want to call methods on the objects passed, something like:
+
+	<T extends Something> T sum(T a, T b) { return a.add ( b ); }
+
+In C++ generic functions/classes can only be defined in headers, since the compiler generates different functions for different types (that it's invoked with). So the compilation is slower. In Java the compilation doesn't have a major penalty, but Java uses a technique called "erasure" where the generic type is erased at runtime, so at runtime Java is actually calling ...
+
+	Something sum(Something a, Something b) { return a.add ( b ); }
+
+So generic programming in Java is only a little syntactic sugar to help with the new foreach construct.
+
+
+
+Excerpt From: "http://stackoverflow.com/questions/36347/what-are-the-differences-between-generic-types-in-c-and-java", but I have modified the last sentence.
