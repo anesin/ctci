@@ -1,0 +1,9 @@
+finally will be called.
+
+The only times finally won't be called are:
+	1. if you call System.exit() or
+	2. if the JVM crashes first
+
+
+
+Excerpt From: "http://stackoverflow.com/questions/65035/does-finally-always-execute-in-java"
