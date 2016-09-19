@@ -1,0 +1,1 @@
+﻿15.5 What is denormalization? Explain the pros and cons.
