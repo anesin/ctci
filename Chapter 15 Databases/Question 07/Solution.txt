@@ -1,0 +1,35 @@
+﻿
+╔═════════════╤══════╗
+║ Students    │      ║
+╠═════════════╪══════╣
+║ StudentID   │ int  ║
+╟─────────────┼──────╢
+║ StudentName │ text ║
+╚═════════════╧══════╝
+
+╔═════════════╤══════╗
+║ Courses     │      ║
+╠═════════════╪══════╣
+║ CourseID    │ int  ║
+╟─────────────┼──────╢
+║ CourseName  │ text ║
+╚═════════════╧══════╝
+
+╔═════════════╤══════╗
+║ Study       │      ║
+╠═════════════╪══════╣
+║ CourseID    │ int  ║
+╟─────────────┼──────╢
+║ StudentID   │ int  ║
+╟─────────────┼──────╢
+║ Grade       │ int  ║
+╚═════════════╧══════╝
+
+
+
+SELECT StudentName, Average FROM Students
+INNER JOIN
+    (SELECT StudentID, AVG(Grade) AS Average FROM Study GROUP BY StudentID) Grades
+WHERE Students.StudentID = Grades.StudentID
+ORDER BY Average DESC
+LIMIT ((SELECT COUNT(*) FROM Students) * 0.1);
