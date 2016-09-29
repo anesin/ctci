@@ -1,0 +1,13 @@
+A context switch is the time spent switching between two processes (e.g., bringing a waiting process into execution and sending an executing process into waiting/terminated state). This happens in multitasking The operating system must bring the state information of waiting processes into memory and save the state information of the running process.
+
+In order to solve this problem, we would like to record timestamps of the last and first instruction of the swapping processes. The context switching time would be the difference in the timestamps between the two processes.
+
+Let’s take an easy example: assume there are only two processes, P1 and P2. P1 is executing and P2 is waiting for execution. At some point, the OS must swap P1 and P2—let’s assume it happens at the Nth instruction of P1. So, the context switch time for this would be Time_Stamp(P2_1) – Time_Stamp(P2_N). Easy enough.
+
+The tricky part is this: how do we know when this swapping occurs? Swapping is governed by the scheduling algorithm of the OS We can not, of course, record the timestamp of every instruction in the process.
+
+Another issue: there are many kernel level threads which are also doing context switches, and the user does not have any control over them. Overall, we can say that this is mostly an approximate calculation which depends on the underlying OS One approximation could be to record the end instruction timestamp of a process and start timestamp of a process and waiting time in queue. If the total time of execution of all the processes was T, then the context switch time = T – (SUM for all processes (waiting time + execution time))
+
+
+
+Excerpt from: "http://functionspace.com/topic/2015/Time-Spent-in-a-Context-Switch"
