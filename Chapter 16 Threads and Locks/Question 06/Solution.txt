@@ -1,0 +1,5 @@
+If you have two threads in one instance of a program, can they both execute A at the same time?
+ - No
+
+Can they execute A and B at the same time?
+ - Yes
