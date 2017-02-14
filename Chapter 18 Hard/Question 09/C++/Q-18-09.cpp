@@ -11,6 +11,7 @@
 using namespace std;
 
 
+// lazy evaluation
 class Median
 {
 public:
@@ -27,7 +28,7 @@ public:
 		return median_;
 	}
 
-	const vector<int> numbers() const {
+	const vector<int>& numbers() const {
 		return numbers_;
 	}
 	
@@ -79,10 +80,115 @@ private:
 };
 
 
+// eager evalution
+class MedianHeap
+{
+public:
+	// time complexity: O(log n)
+	// space complexity: O(n)
+	void Add(int n) {
+		numbers_.push_back(n);
+		if (numbers_.size() == 1) {
+			heap_row_.push_back(n);
+		}
+		else if (heap_row_.size() == heap_high_.size()) {
+			if (n <= heap_high_[0]) {
+				heap_row_.push_back(n);
+				UpHeapRow();
+			}
+			else {
+				heap_row_.push_back(heap_high_[0]);
+				UpHeapRow();
+				heap_high_[0] = n;
+				DownHeapHigh();
+			}
+		}
+		else {	// heap_row_.size() >= heap_high_.size()
+			if (heap_row_[0] <= n) {
+				heap_high_.push_back(n);
+				UpHeapHigh();
+			}
+			else {
+				heap_high_.push_back(heap_row_[0]);
+				UpHeapHigh();
+				heap_row_[0] = n;
+				DownHeapRow();
+			}
+		}
+	}
+
+	float GetMedian() {
+		if (numbers_.empty())
+			return 0;
+		float median = static_cast<float>(heap_row_[0]);
+		if (heap_row_.size() == heap_high_.size())
+			median = (median + heap_high_[0])/2;
+		return median;
+	}
+
+	const vector<int>& numbers() const {
+		return numbers_;
+	}
+
+private:  // recommend stl::##_heap, less/greater
+	void UpHeapRow() {
+		UpHeap(heap_row_, [](int lhs, int rhs) -> bool {
+			return lhs < rhs;
+		});
+	}
+
+	void UpHeapHigh() {
+		UpHeap(heap_high_, [](int lhs, int rhs) -> bool {
+			return lhs > rhs;
+		});
+	}
+
+	void DownHeapRow() {
+		DownHeap(heap_row_, [](int lhs, int rhs) -> bool {
+			return lhs < rhs;
+		});
+	}
+
+	void DownHeapHigh() {
+		DownHeap(heap_high_, [](int lhs, int rhs) -> bool {
+			return lhs > rhs;
+		});
+	}
+
+	void UpHeap(vector<int> &heap, bool (*cmp)(int, int)) {
+		size_t i = heap.size() - 1;
+		int n = heap[i];
+		for (size_t j = i/2; j < i && cmp(heap[j], n); j /= 2) {
+			heap[i] = heap[j];
+			i = j;
+		}
+		heap[i] = n;
+	}
+
+	void DownHeap(vector<int> &heap, bool (*cmp)(int, int)) {
+		const size_t cnt = heap.size();
+		size_t i = 0;
+		int n = heap[0];
+		for (size_t j = i*2 + 1; j < cnt; j = i*2 + 1) {
+			if (j < cnt - 1 && cmp(heap[j], heap[j + 1]))
+				++j;
+			if (cmp(n, heap[j]) == false)
+				break;
+			heap[i] = heap[j];
+			i = j;
+		}
+		heap[i] = n;
+	}
+
+	vector<int> numbers_;
+	vector<int> heap_row_;
+	vector<int> heap_high_;
+};
+
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	Median m;
+	MedianHeap m;  // Median m;
 	auto test = [&]() {
 		for (auto n : m.numbers())
 			cout << n << " ";
