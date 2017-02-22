@@ -21,79 +21,79 @@ using namespace std;
 class Transform
 {
 public:
-  Transform(const vector<string> &dictionary)
-      : dictionary_(dictionary),
-        len_(dictionary.empty()? 0: dictionary[0].length()) {
-    const size_t size = dictionary_.size();
-    hash_.reserve(size);
-    for (size_t i = 0; i < size; ++i)
-      hash_[dictionary_[i]] = i;
-  }
+	Transform(const vector<string> &dictionary)
+			: dictionary_(dictionary),
+				len_(dictionary.empty()? 0: dictionary[0].length()) {
+		const size_t size = dictionary_.size();
+		hash_.reserve(size);
+		for (size_t i = 0; i < size; ++i)
+			hash_[dictionary_[i]] = i;
+	}
 
-  // time complexity: O(nm)
-  // space complexity: O(m)
-  vector<size_t> Find(size_t from, size_t to) {
-    vector<size_t> indexes;
-    if (from >= dictionary_.size() || to >= dictionary_.size())
-      return indexes;
+	// time complexity: O(nm)
+	// space complexity: O(m)
+	vector<size_t> Find(size_t from, size_t to) {
+		vector<size_t> indexes;
+		if (from >= dictionary_.size() || to >= dictionary_.size())
+			return indexes;
 
-    if (from == to) {
-      indexes.push_back(from);
-      return indexes;
-    }
+		if (from == to) {
+			indexes.push_back(from);
+			return indexes;
+		}
 
-    queue<size_t> q;
-    q.push(from);
-    unordered_set<size_t> visited;
-    visited.insert(from);
-    unordered_map<size_t, size_t> backtrack;
+		queue<size_t> q;
+		q.push(from);
+		unordered_set<size_t> visited;
+		visited.insert(from);
+		unordered_map<size_t, size_t> trace;
 
-    while (q.empty() == false) {
-      size_t i = q.front();
-      q.pop();
-      vector<size_t> candidates = Candidates(dictionary_[i]);
-      for (auto j : Candidates(dictionary_[i])) {
-        if (j == to) {
-          indexes.push_back(j);
-          for (j = i; backtrack.find(j) != backtrack.end(); j = backtrack[j])
-            indexes.push_back(j);
-          indexes.push_back(j);
-          reverse(indexes.begin(), indexes.end());
-          return indexes;
-        }
-        if (visited.find(j) == visited.end()) {
-          q.push(j);
-          visited.insert(j);
-          backtrack[j] = i;
-        }
-      }
-    }
+		while (q.empty() == false) {
+			size_t i = q.front();
+			q.pop();
+			vector<size_t> candidates = Candidates(dictionary_[i]);
+			for (auto j : Candidates(dictionary_[i])) {
+				if (j == to) {
+					indexes.push_back(j);
+					for (j = i; trace.find(j) != trace.end(); j = trace[j])
+						indexes.push_back(j);
+					indexes.push_back(j);
+					reverse(indexes.begin(), indexes.end());
+					return indexes;
+				}
+				if (visited.find(j) == visited.end()) {
+					q.push(j);
+					visited.insert(j);
+					trace[j] = i;
+				}
+			}
+		}
 
-    return indexes;
-  }
-
-private:
-  vector<size_t> Candidates(string keyword) {
-    vector<size_t> candidates;
-    for (size_t i = 0; i < len_; ++i) {
-      char prev = keyword[i];
-      for (char next = 'a'; next < 'z'; ++next) {
-        if (next == prev)
-          continue;
-        keyword[i] = next;
-        auto it = hash_.find(keyword);
-        if (it != hash_.end())
-          candidates.push_back(it->second);
-      }
-      keyword[i] = prev;
-    }
-    return candidates;
-  }
+		return indexes;
+	}
 
 private:
-  const vector<string> &dictionary_;
-  unordered_map<string, size_t> hash_;
-  const size_t len_;
+	vector<size_t> Candidates(string keyword) {
+		vector<size_t> candidates;
+		for (size_t i = 0; i < len_; ++i) {
+			char prev = keyword[i];
+			for (char next = 'a'; next < 'z'; ++next) {
+				if (next == prev)
+					continue;
+				keyword[i] = next;
+				auto it = hash_.find(keyword);
+				if (it != hash_.end())
+					candidates.push_back(it->second);
+			}
+			keyword[i] = prev;
+		}
+		return candidates;
+	}
+
+private:
+	const vector<string> &dictionary_;
+	unordered_map<string, size_t> hash_;
+	const size_t len_;
 };
 
 
